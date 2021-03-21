@@ -1,19 +1,17 @@
 #include <stdio.h>
 #include "lex.h"
 #include "vendor/nothings/stb/stretchy_buffer.h"
+#include "parse.h"
 
-void print_tokens(const Token *tokens) {
-    for (size_t i = 0; i < sb_count(tokens); i++) {
-        Token token = tokens[i];
-        switch (token.kind) {
-            case TOK_INT:
-                printf("Int(%d)\n", token.value);
+void print_commands(const Command *commands) {
+    for (size_t i = 0; i < sb_count(commands); i++) {
+        Command command = commands[i];
+        switch (command.kind) {
+            case COMMAND_KIND_PUSH:
+                printf("Push(%d)\n", command.value);
                 break;
-            case TOK_POP:
-                printf("Pop\n");
-                break;
-            case TOK_PUSH:
-                printf("Push\n");
+            case COMMAND_KIND_POP:
+                printf("Pop()\n");
                 break;
         }
     }
@@ -22,15 +20,13 @@ void print_tokens(const Token *tokens) {
 int main(void) {
     LexResult result = lex("push 1\n"
                            "pop\n"
-                           "pop    pip     push\n"
-                           "push 1");
+                           "push");
     switch (result.kind) {
         case LEX_RESULT_KIND_OK:
-            print_tokens(result.tokens);
-            break;
+            print_commands(parse(result.tokens));
+            return 0;
         case LEX_RESULT_KIND_ERR:
             lex_err_print(result.err);
-            break;
+            return 1;
     }
-    return 0;
 }
