@@ -36,10 +36,7 @@ typedef enum {
 
 typedef struct sLexErr {
     LexErrKind kind;
-    union {
-        // LEX_ERR_KIND_UNRECOGNISED_IDENTIFIER
-        Span span;
-    };
+    Span span;
 } LexErr;
 
 typedef struct sLexer {
@@ -49,29 +46,12 @@ typedef struct sLexer {
     size_t col;
     char curr_char;
 
-    Token *tokens;
-
     bool has_err;
     LexErr err;
 } Lexer;
 
-typedef enum {
-    LEX_RESULT_KIND_OK,
-    LEX_RESULT_KIND_ERR
-} LexResultKind;
+void lex_err_print(LexErr *err);
 
-typedef struct sLexResult {
-    LexResultKind kind;
-    union {
-        // LEX_RESULT_KIND_OK
-        Token *tokens;
-        // LEX_RESULT_KIND_ERR
-        LexErr err;
-    };
-} LexResult;
-
-void lex_err_print(LexErr err);
-
-LexResult lex(char *source);
+LexErr *lex(char *source, Token *tokens);
 
 #endif //PUSH_N_POP_LEX_H

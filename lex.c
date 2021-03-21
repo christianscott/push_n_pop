@@ -39,9 +39,6 @@ Lexer *lexer_new(const char *source) {
     lexer->source = source;
     lexer->curr_char = source[0];
 
-    Token *tokens = NULL;
-    lexer->tokens = tokens;
-
     return lexer;
 }
 
@@ -71,7 +68,7 @@ Span lexer_create_span(Lexer *lexer, size_t len) {
     return span;
 }
 
-void lexer_lex_identifier(Lexer *lexer) {
+void lexer_lex_identifier(Lexer *lexer, Token *tokens) {
     size_t start = lexer->offset;
     while (is_ascii_alpha_numeric(lexer->curr_char)) {
         lexer_next(lexer);
@@ -85,10 +82,10 @@ void lexer_lex_identifier(Lexer *lexer) {
     Span span = lexer_create_span(lexer, len);
     if (strcmp(identifier, "push") == 0) {
         Token token = {.kind = TOK_PUSH, .span = span};
-        sb_push(lexer->tokens, token);
+        sb_push(tokens, token);
     } else if (strcmp(identifier, "pop") == 0) {
         Token token = {.kind = TOK_POP, .span = span};
-        sb_push(lexer->tokens, token);
+        sb_push(tokens, token);
     } else {
         LexErr err = {
                 .kind = LEX_ERR_KIND_UNRECOGNISED_IDENTIFIER,
@@ -99,7 +96,7 @@ void lexer_lex_identifier(Lexer *lexer) {
     }
 }
 
-void lexer_lex_int(Lexer *lexer) {
+void lexer_lex_int(Lexer *lexer, Token *tokens) {
     size_t start = lexer->offset;
     while (is_ascii_numeric(lexer->curr_char)) {
         lexer_next(lexer);
@@ -113,7 +110,7 @@ void lexer_lex_int(Lexer *lexer) {
     Span span = lexer_create_span(lexer, len);
     Token token = {.kind = TOK_INT, .span = span, .value = atoi(num)};
 
-    sb_push(lexer->tokens, token);
+    sb_push(tokens, token);
 }
 
 const char *span_get_text(Span span) {
@@ -150,34 +147,22 @@ char *repeat_char(char c, int times) {
     return repeated;
 }
 
-void lex_err_print(LexErr err) {
-    switch (err.kind) {
+void lex_err_print(LexErr *err) {
+    switch (err->kind) {
         case LEX_ERR_KIND_UNRECOGNISED_IDENTIFIER: {
-            printf("[eval]:%zu:%zu LexErr\n", err.span.line, err.span.col);
-            printf("%s\n", span_get_full_line(err.span));
-            printf("%s^ unrecognised identifier \"%s\"\n", repeat_char(' ', err.span.col), span_get_text(err.span));
+            printf("[eval]:%zu:%zu LexErr\n", err->span.line, err->span.col);
+            printf("%s\n", span_get_full_line(err->span));
+            printf("%s^ unrecognised identifier \"%s\"\n", repeat_char(' ', err->span.col),
+                   span_get_text(err->span));
         }
     }
 }
 
-LexResult lexer_into_lex_result(Lexer *lexer) {
-    LexResult result;
-    if (lexer->has_err) {
-        result.kind = LEX_RESULT_KIND_ERR;
-        result.err = lexer->err;
-    } else {
-        result.kind = LEX_RESULT_KIND_OK;
-        result.tokens = lexer->tokens;
-    }
-    lexer_free_except_tokens(lexer);
-    return result;
-}
-
-LexResult lex(char *source) {
+LexErr *lex(char *source, Token *tokens) {
     Lexer *lexer = lexer_new(source);
     while (lexer->curr_char != '\0') {
         if (lexer->has_err) {
-            return lexer_into_lex_result(lexer);
+            return &lexer->err;
         }
 
         if (is_whitespace(lexer->curr_char)) {
@@ -186,15 +171,15 @@ LexResult lex(char *source) {
         }
 
         if (is_ascii_alpha(lexer->curr_char)) {
-            lexer_lex_identifier(lexer);
+            lexer_lex_identifier(lexer, tokens);
             continue;
         }
 
         if (is_ascii_numeric(lexer->curr_char)) {
-            lexer_lex_int(lexer);
+            lexer_lex_int(lexer, tokens);
         }
     }
 
-    return lexer_into_lex_result(lexer);
+    return NULL;
 }
 

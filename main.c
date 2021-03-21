@@ -2,31 +2,42 @@
 #include "lex.h"
 #include "vendor/nothings/stb/stretchy_buffer.h"
 #include "parse.h"
+#include "vm.h"
 
-void print_commands(const Command *commands) {
+void vm_run_commands(VM *vm, Command *commands) {
     for (size_t i = 0; i < sb_count(commands); i++) {
         Command command = commands[i];
         switch (command.kind) {
             case COMMAND_KIND_PUSH:
-                printf("Push(%d)\n", command.value);
+                vm_push_int(vm, command.value);
+                printf("pushed %d\n", command.value);
                 break;
-            case COMMAND_KIND_POP:
-                printf("Pop()\n");
+            case COMMAND_KIND_POP: {
+                Object *o = vm_pop(vm);
+                printf("popped %d\n", o->value);
                 break;
+            }
         }
     }
 }
 
 int main(void) {
-    LexResult result = lex("push 1\n"
-                           "pop\n"
-                           "push");
-    switch (result.kind) {
-        case LEX_RESULT_KIND_OK:
-            print_commands(parse(result.tokens));
-            return 0;
-        case LEX_RESULT_KIND_ERR:
-            lex_err_print(result.err);
-            return 1;
+    Token tokens[] = {};
+    char *source = "push 1\n"
+                   "pop\n"
+                   "push 2"
+                   "pop\n";
+    LexErr *err = lex(source, tokens);
+    if (err != NULL) {
+        lex_err_print(err);
+        return 1;
     }
+
+    Command *commands = NULL;
+    commands = parse(tokens);
+
+    VM *vm = vm_new();
+    vm_run_commands(vm, commands);
+
+    return 0;
 }
