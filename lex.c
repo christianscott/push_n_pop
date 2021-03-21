@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "parse.h"
+#include "lex.h"
 #include "stretchy_buffer.h"
 
 bool is_ascii_alpha(const char c) {
@@ -29,10 +29,13 @@ Lexer *lexer_new(const char *source) {
     lexer->source = source;
 
     Token *tokens = NULL;
-
     lexer->tokens = tokens;
 
     return lexer;
+}
+
+void lexer_free_except_tokens(Lexer *lexer) {
+    free(lexer);
 }
 
 void lexer_next(Lexer *lexer) {
@@ -77,6 +80,17 @@ void lexer_lex_int(Lexer *lexer) {
     sb_push(lexer->tokens, token);
 }
 
+LexResult lexer_into_lex_result(Lexer *lexer) {
+    LexResult result = {
+        .kind = LEX_RESULT_KIND_OK,
+        .tokens = lexer->tokens
+    };
+
+    lexer_free_except_tokens(lexer);
+
+    return result;
+}
+
 LexResult lex(char *source) {
     Lexer *lexer = lexer_new(source);
     while (lexer->current_char != '\0') {
@@ -95,12 +109,6 @@ LexResult lex(char *source) {
         }
     }
 
-    LexResult result = {
-            .kind = LEX_RESULT_KIND_OK,
-            .tokens = lexer->tokens
-    };
-
-//    free(lexer);
-    return result;
+    return lexer_into_lex_result(lexer);
 }
 

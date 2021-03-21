@@ -2,8 +2,8 @@
 // Created by Christian Scott on 20/3/21.
 //
 
-#ifndef PUSH_N_POP_PARSE_H
-#define PUSH_N_POP_PARSE_H
+#ifndef PUSH_N_POP_LEX_H
+#define PUSH_N_POP_LEX_H
 
 #define ASCII_ZERO 48
 #define ASCII_NINE 57
@@ -62,4 +62,4 @@ typedef struct sLexResult {
 
 LexResult lex(char *source);
 
-#endif //PUSH_N_POP_PARSE_H
+#endif //PUSH_N_POP_LEX_H

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "parse.h"
+#include "lex.h"
 #include "stretchy_buffer.h"
 
 int main(void) {
@@ -9,7 +9,6 @@ int main(void) {
     assert(result.kind == LEX_RESULT_KIND_OK);
 
     Token *tokens = result.tokens;
-
     for (size_t i = 0; i < sb_count(tokens); i++) {
         Token token = tokens[i];
         switch (token.kind) {
