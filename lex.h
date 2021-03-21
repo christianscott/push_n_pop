@@ -5,12 +5,7 @@
 #ifndef PUSH_N_POP_LEX_H
 #define PUSH_N_POP_LEX_H
 
-#define ASCII_ZERO 48
-#define ASCII_NINE 57
-#define ASCII_UPPER_A 65
-#define ASCII_UPPER_Z 90
-#define ASCII_LOWER_A 97
-#define ASCII_LOWER_Z 122
+#include "stdbool.h"
 
 typedef enum {
     TOK_PUSH,
@@ -18,8 +13,17 @@ typedef enum {
     TOK_INT,
 } TokenKind;
 
+typedef struct sSpan {
+    size_t offset;
+    size_t len;
+    size_t col;
+    size_t line;
+    const char *source;
+} Span;
+
 typedef struct sToken {
     TokenKind kind;
+    Span span;
     union {
         // TOK_INT
         int value;
@@ -27,29 +31,33 @@ typedef struct sToken {
 } Token;
 
 typedef enum {
-    INSTR_PUSH,
-    INSTR_PAIR,
-    INSTR_POP
-} InstructionKind;
+    LEX_ERR_KIND_UNRECOGNISED_IDENTIFIER
+} LexErrKind;
 
-typedef struct sInstruction {
-    InstructionKind kind;
+typedef struct sLexErr {
+    LexErrKind kind;
     union {
-        // INSTR_PUSH
-        int value;
+        // LEX_ERR_KIND_UNRECOGNISED_IDENTIFIER
+        Span span;
     };
-} Instruction;
+} LexErr;
 
 typedef struct sLexer {
+    const char *source;
+    size_t offset;
+    size_t line;
+    size_t col;
+    char curr_char;
+
     Token *tokens;
 
-    const char *source;
-    size_t current_char_idx;
-    char current_char;
+    bool has_err;
+    LexErr err;
 } Lexer;
 
 typedef enum {
     LEX_RESULT_KIND_OK,
+    LEX_RESULT_KIND_ERR
 } LexResultKind;
 
 typedef struct sLexResult {
@@ -57,8 +65,12 @@ typedef struct sLexResult {
     union {
         // LEX_RESULT_KIND_OK
         Token *tokens;
+        // LEX_RESULT_KIND_ERR
+        LexErr err;
     };
 } LexResult;
+
+void lex_err_print(LexErr err);
 
 LexResult lex(char *source);
 
