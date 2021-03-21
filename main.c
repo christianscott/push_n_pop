@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "lex.h"
-#include "stretchy_buffer.h"
+#include "vendor/nothings/stb/stretchy_buffer.h"
 
 void print_tokens(const Token *tokens) {
     for (size_t i = 0; i < sb_count(tokens); i++) {

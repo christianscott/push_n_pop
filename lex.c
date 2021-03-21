@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "lex.h"
-#include "stretchy_buffer.h"
+#include "vendor/nothings/stb/stretchy_buffer.h"
 
 #define ASCII_ZERO 48
 #define ASCII_NINE 57
